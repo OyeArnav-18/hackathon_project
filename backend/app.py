@@ -1,4 +1,3 @@
-# In backend/app.py - FINAL CORRECTED VERSION
 
 from flask import Flask, jsonify, request, session
 from flask_cors import CORS
@@ -13,7 +12,6 @@ app = Flask(__name__)
 app.secret_key = 'a_very_secret_and_long_random_string_for_security'
 CORS(app)
 
-# IMPORTANT: Replace 'root' and 'your_password' with your actual MySQL credentials!
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Scjjanke7#@localhost:3306/hackathon_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
