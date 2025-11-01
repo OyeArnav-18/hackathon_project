@@ -7,13 +7,21 @@ from sqlalchemy.sql import func
 
 
 # --- 1. The User Model (Table: user) ---
+# In backend/models.py - Corrected User Class
+
+# --- 1. The User Model (Table: user) ---
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(Integer, primary_key=True)
     username = db.Column(String(80), unique=True, nullable=False)
     password_hash = db.Column(String(128), nullable=False)
 
-    # Link to habits (allows getting all habits for a user: user.habits)
+    # --- CRITICAL MISSING FIELDS (Gamification) ---
+    xp = db.Column(Integer, default=0)
+    level = db.Column(Integer, default=1)
+    # ---------------------------------------------
+
+    # Link to habits (THIS IS THE CORRECT AND ONLY PLACEMENT)
     habits = relationship('Habit', backref='owner', lazy=True)
 
     # Methods for Hashing & Verification
@@ -24,6 +32,7 @@ class User(db.Model):
         return pwd_context.verify(password, self.password_hash)
 
 
+# ... (rest of the file is correct) ...
 # --- 2. The Habit Model (Table: habit) ---
 class Habit(db.Model):
     __tablename__ = 'habit'
