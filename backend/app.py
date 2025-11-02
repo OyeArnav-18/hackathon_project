@@ -11,7 +11,15 @@ from sqlalchemy import desc
 # --- FLASK APP INITIALIZATION & CONFIGURATION ---
 app = Flask(__name__)
 app.secret_key = 'a_very_secret_and_long_random_string_for_security'
-CORS(app)
+
+
+# --- FINAL CORS CONFIGURATION FOR PRODUCTION/LOCAL MIXED ENVIRONMENT ---
+CORS(app,
+     supports_credentials=True,
+     # Render's URL is HTTPS, Localhost is HTTP. Both must be listed.
+     origins=['https://smart-habit-tracker-api-303d.onrender.com',
+              'http://localhost:63342',
+              'http://127.0.0.1:63342'])
 
 # IMPORTANT: Replace 'root' and 'your_password' with your actual MySQL credentials!
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Scjjanke7#@localhost:3306/hackathon_db'
