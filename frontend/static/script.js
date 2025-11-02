@@ -15,7 +15,7 @@ const SLEEP_MODAL = document.getElementById('sleep-modal');
 const OPEN_SLEEP_LOG_BTN = document.getElementById('open-sleep-log-btn');
 const CLOSE_MODAL_BTN = document.querySelector('.modal-content .close-btn');
 
-const BASE_URL = 'http://localhost:5000'; // Change to DEPLOYED URL later!
+const BASE_URL = 'https://smart-habit-tracker-api-303d.onrender.com'; // Change to DEPLOYED URL later!
 
 // Helper function to send data and include session cookies
 async function apiFetch(url, method = 'GET', data = null) {
