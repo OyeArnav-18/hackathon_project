@@ -7,7 +7,7 @@ from models import User, Habit, HabitLog
 # NEW: Import necessary classes for the streak calculation and date handling
 from datetime import date, timedelta
 from sqlalchemy import desc
-
+import os
 # --- FLASK APP INITIALIZATION & CONFIGURATION ---
 app = Flask(__name__)
 app.secret_key = 'a_very_secret_and_long_random_string_for_security'
@@ -20,11 +20,22 @@ CORS(app,
      origins=['https://smart-habit-tracker-api-303d.onrender.com',
               'http://localhost:63342',
               'http://127.0.0.1:63342'])
+# In backend/app.py - Find and REPLACE the DB configuration block:
 
-# IMPORTANT: Replace 'root' and 'your_password' with your actual MySQL credentials!
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Scjjanke7#@localhost:3306/hackathon_db'
+# IMPORTANT: Reads environment variable if it exists (Render), otherwise uses local SQLite file
+DB_URI = os.environ.get('DATABASE_URL')
+
+if DB_URI:
+    # This runs when deploying to Render (HTTPS URI)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI.replace('postgres://', 'postgresql://')
+else:
+    # This runs when testing locally (SQLite file path)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test_habit_tracker.db'
+    print("--- WARNING: Using local SQLite database file ---")
+
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+# ... (rest of the file remains the same)
 # Attach the database object to the app
 db.init_app(app)
 
