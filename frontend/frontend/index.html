@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Habit Tracker | Hackathon</title>
+    <link rel="stylesheet" href="static/main.css">
+</head>
+<body>
+    <header>
+        <h1>Smart Habit Tracker 🚀</h1>
+        <button id="dark-mode-toggle">🌓 Toggle Dark Mode</button>
+    </header>
+
+    <main>
+        <section id="auth-section">
+            <h2>Start Tracking</h2>
+            <div class="auth-forms-container">
+                <div class="auth-card">
+                    <h3>Sign Up</h3>
+                    <form id="register-form">
+                        <input type="text" id="reg-username" placeholder="Username" required>
+                        <input type="password" id="reg-password" placeholder="Password" required>
+                        <button type="submit">Sign Up</button>
+                    </form>
+                </div>
+
+                <div class="auth-card">
+                    <h3>Login</h3>
+                    <form id="login-form">
+                        <input type="text" id="login-username" placeholder="Username" required>
+                        <input type="password" id="login-password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+            </div>
+            <p id="auth-message"></p>
+        </section>
+
+        <section id="dashboard-section" style="display: none;">
+            <p>Welcome back, <strong id="user-display"></strong>!</p>
+            <button id="logout-btn">🚪 Logout</button>
+
+            <div id="gamification-stats">
+                <h3>Your Progress</h3>
+                <div class="stats-row">
+                    <p>Level: <span id="user-level">1</span></p>
+                    <p>Total XP: <span id="user-xp-total">0</span></p>
+                </div>
+                <div class="progress-bar-container">
+                    <div id="xp-bar-fill"></div>
+                    <span class="xp-label">XP to next level: <span id="xp-needed">100</span></span>
+                </div>
+                <p class="achievement-text">🏆 Current Streak is your Achievement!</p>
+            </div>
+
+            <div class="habit-manager">
+                <h4>Define a New Habit</h4>
+                <form id="new-habit-form">
+                    <input type="text" id="new-habit-name" placeholder="New Habit (e.g., Read 30 min)" required>
+                    <button type="submit">Add Habit</button>
+                </form>
+
+                <div id="habits-list">
+                    <p>Loading habits...</p>
+                </div>
+            </div>
+
+            <button id="open-sleep-log-btn" class="secondary-btn">🛌 Log Sleep Today</button>
+        </section>
+    </main>
+
+    <div id="sleep-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h4>Log Your Sleep</h4>
+            <form id="sleep-log-form">
+                <label for="bedtime">Bedtime:</label>
+                <input type="time" id="bedtime" required><br><br>
+                <label for="wake-up">Wake Up Time:</label>
+                <input type="time" id="wake-up" required><br><br>
+                <label for="quality">Quality:</label>
+                <select id="quality">
+                    <option value="Great">Great (8+ hours)</option>
+                    <option value="Good">Good (6-8 hours)</option>
+                    <option value="Poor">Poor (< 6 hours)</option>
+                </select><br><br>
+                <button type="submit">Save Sleep</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

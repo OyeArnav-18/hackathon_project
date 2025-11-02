@@ -1,0 +1,199 @@
+/* --- BASE STYLES & LAYOUT (Responsiveness) --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+header {
+    background-color: #4CAF50; /* Primary Brand Color (Green) */
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+main {
+    padding: 20px;
+    max-width: 900px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+/* --- COMPONENTS --- */
+button {
+    cursor: pointer;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    background-color: #007bff;
+    color: white;
+    margin-left: 5px;
+}
+
+button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+input[type="text"], input[type="password"], input[type="time"], select {
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 250px;
+}
+
+.auth-forms-container {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.auth-card {
+    flex: 1;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* --- HABIT CARDS & GAMIFICATION --- */
+.habit-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 5px solid #4CAF50;
+    background-color: #e8f5e9;
+    border-radius: 6px;
+}
+
+.habit-card p {
+    margin: 0;
+    flex-grow: 1;
+}
+
+.streak-count {
+    font-weight: bold;
+    color: #ff9800; /* Orange for streaks */
+    margin-right: 15px;
+}
+
+/* Progress Bar (XP) */
+.progress-bar-container {
+    background-color: #ddd;
+    border-radius: 5px;
+    height: 25px;
+    margin-top: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+#xp-bar-fill {
+    height: 100%;
+    background-color: #ffc107; /* Yellow/Gold for XP */
+    transition: width 0.5s ease;
+}
+
+.xp-label {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #333;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+/* --- DARK MODE (Key Feature) --- */
+.dark-mode {
+    background-color: #121212 !important;
+    color: #e0e0e0 !important;
+}
+
+.dark-mode header {
+    background-color: #2e7d32; /* Darker green */
+}
+
+.dark-mode main {
+    background-color: #1e1e1e !important;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .auth-card, .dark-mode input, .dark-mode select {
+    background-color: #333 !important;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+.dark-mode .habit-card {
+    background-color: #263238; /* Dark blue-gray */
+    border-left-color: #66bb6a;
+}
+.dark-mode .xp-label {
+    color: white;
+    text-shadow: none;
+}
+
+/* --- MODAL STYLES --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4); 
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto; 
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%; 
+    max-width: 500px;
+}
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+.close-btn:hover, .close-btn:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* --- MEDIA QUERIES (Responsiveness) --- */
+@media (max-width: 768px) {
+    .auth-forms-container {
+        flex-direction: column;
+    }
+    input, select {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    .habit-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .habit-card button {
+        margin-top: 10px;
+        width: 100%;
+    }
+}

@@ -1,3 +1,5 @@
+# In backend/app.py - FINAL CORRECTED VERSION
+
 from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 from extensions import db
@@ -9,11 +11,9 @@ from sqlalchemy import desc
 # --- FLASK APP INITIALIZATION & CONFIGURATION ---
 app = Flask(__name__)
 app.secret_key = 'a_very_secret_and_long_random_string_for_security'
+CORS(app)
 
-CORS(app,
-     supports_credentials=True, # Sends the required 'Access-Control-Allow-Credentials: true' header
-     origins=['http://localhost:63342', 'http://127.0.0.1:63342', 'http://localhost:5000'])
-# Added port 63342 to the allowed origins list to prevent the block.
+# IMPORTANT: Replace 'root' and 'your_password' with your actual MySQL credentials!
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Scjjanke7#@localhost:3306/hackathon_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -205,81 +205,40 @@ def delete_habit(habit_id):
         return jsonify({"message": "Failed to delete habit"}), 500
 
 
-# In backend/app.py - Find and REPLACE the entire log_habit route:
-
 @app.route('/api/log', methods=['POST'])
 def log_habit():
-    # 1. Authorization Check
     if 'user_id' not in session:
         return jsonify({"message": "Unauthorized. Please log in."}), 401
 
     data = request.get_json()
-    habit_id = data.get('habit_id')  # CORRECT: Get habit_id from the JSON request data
+    habit_id = data.get('habit_id')
 
     if not habit_id:
         return jsonify({"message": "Habit ID is required"}), 400
 
     user_id = session['user_id']
-    user = User.query.get(user_id)
 
-    # 2. Security Check: Find habit and ensure it belongs to the user
-    # We need the habit object to access its name later and for security.
     habit = Habit.query.filter_by(id=habit_id, user_id=user_id).first()
     if not habit:
         return jsonify({"message": "Habit not found or access denied"}), 404
 
-    # 3. Check for duplicates (prevent logging the same habit twice on the same day)
     today_log = HabitLog.query.filter_by(habit_id=habit_id, log_date=db.func.current_date()).first()
 
     if today_log:
         return jsonify({"message": "Habit already logged today"}), 200
 
-    # 4. Create the new log entry and award XP
-    if user:
-        user.xp += 10  # Award 10 XP
-
     new_log = HabitLog(habit_id=habit_id, completed=True)
 
-    # 5. Save and commit
     try:
         db.session.add(new_log)
         db.session.commit()
-        return jsonify({"message": f"Habit '{habit.name}' logged successfully", "xp_gained": 10}), 201
+        return jsonify({"message": f"Habit '{habit.name}' logged successfully"}), 201
     except Exception as e:
         db.session.rollback()
         print(e)
         return jsonify({"message": "Failed to log habit"}), 500
-@app.route('/api/sleep', methods=['POST'])
-def log_sleep():
-    if 'user_id' not in session:
-        return jsonify({"message": "Unauthorized. Please log in."}), 401
 
-    data = request.get_json()
-    bedtime = data.get('bedtime')
-    wake_up = data.get('wake-up')
-    quality = data.get('quality')
 
-    if not bedtime or not wake_up or not quality:
-        return jsonify({"message": "All sleep fields are required"}), 400
-
-    user_id = session['user_id']
-    user = User.query.get(user_id)
-
-    # Award XP for logging sleep
-    if user:
-        user.xp += 5 # Award 5 XP for logging the sleep bonus
-
-    try:
-        # NOTE: Since we didn't create a SleepLog table, we only commit the User's XP update.
-        db.session.commit()
-        return jsonify({
-            "message": "Sleep logged successfully. +5 XP!",
-            "xp_gained": 5
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        print(e)
-        return jsonify({"message": "Failed to log sleep"}), 500
 # --- RUN BLOCK ---
 if __name__ == '__main__':
     with app.app_context():
