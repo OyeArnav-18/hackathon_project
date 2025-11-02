@@ -116,16 +116,18 @@ def login_user():
     else:
         return jsonify({"message": "Invalid username or password"}), 401
 
-
 @app.route('/api/status', methods=['GET'])
 def get_status():
     if 'user_id' in session:
         user = User.query.get(session['user_id'])
         if user:
+            # CRITICAL FIX: Ensure XP and Level are returned for the frontend
             return jsonify({
                 "logged_in": True,
                 "username": user.username,
-                "id": user.id
+                "id": user.id,
+                "xp": user.xp,
+                "level": user.level  # Added XP and Level here
             }), 200
 
     return jsonify({"logged_in": False}), 200
