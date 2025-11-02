@@ -1,0 +1,171 @@
+:root {
+    --bg-color: #f0f4f8;
+    --text-color: #333;
+    --accent-color: #4a90e2;
+    --card-bg: #fff;
+    --shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+body.dark {
+    --bg-color: #1a1a1a;
+    --text-color: #ddd;
+    --accent-color: #6ab0f3;
+    --card-bg: #2c2c2c;
+    --shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    transition: background 0.3s, color 0.3s;
+}
+
+.hidden { display: none; }
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    width: 350px;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+/* Bento Grid - Unique modular design */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.bento-item {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+}
+
+.bento-item:hover {
+    transform: translateY(-5px);
+}
+
+.span-2 { grid-column: span 2; }
+
+/* Carousel - With smooth transitions */
+.carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.carousel-inner {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-item {
+    min-width: 100%;
+    padding: 15px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--accent-color), #007bff);
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.carousel-prev, .carousel-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.4);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.carousel-prev { left: 10px; }
+.carousel-next { right: 10px; }
+
+/* Toast - Modern, animated */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--accent-color);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    transform: translateY(20px);
+    box-shadow: var(--shadow);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+input, select, button {
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-color);
+    width: calc(100% - 22px);
+}
+
+button {
+    background: var(--accent-color);
+    color: white;
+    cursor: pointer;
+    border: none;
+}
+
+button:hover {
+    background: #007bff;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background: rgba(255,255,255,0.1);
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

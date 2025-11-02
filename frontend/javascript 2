@@ -1,0 +1,271 @@
+const BASE_URL = 'http://localhost:5000/api';
+
+// Dark Mode Toggle
+document.getElementById('dark-mode-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+});
+
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark');
+}
+
+// Auth Modal
+const authModal = document.getElementById('auth-modal');
+const app = document.getElementById('app');
+const authForm = document.getElementById('auth-form');
+const authTitle = document.getElementById('auth-title');
+const authSwitch = document.getElementById('auth-switch');
+let isLogin = true;
+
+function switchAuthMode() {
+    isLogin = !isLogin;
+    authTitle.innerText = isLogin ? 'Login' : 'Register';
+    authSwitch.innerHTML = isLogin ? 'Don\'t have an account? <a href="#" onclick="switchAuthMode()">Sign up</a>' : 'Already have an account? <a href="#" onclick="switchAuthMode()">Login</a>';
+}
+
+authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const endpoint = isLogin ? '/login' : '/register';
+    try {
+        const res = await fetch(`${BASE_URL}${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (res.ok) {
+            authModal.classList.add('hidden');
+            app.classList.remove('hidden');
+            loadData();
+            showToast(data.message);
+            simulateAIReminders();
+        } else {
+            showToast(data.message || 'Error');
+        }
+    } catch (err) {
+        showToast('Network error');
+    }
+});
+
+// Logout
+document.getElementById('logout-btn').addEventListener('click', async () => {
+    // Since backend uses session, clear client-side and reload
+    localStorage.clear();
+    location.reload();
+});
+
+// Profile
+const profileModal = document.getElementById('profile-modal');
+document.getElementById('profile-btn').addEventListener('click', async () => {
+    const res = await fetch(`${BASE_URL}/status`, { credentials: 'include' });
+    const data = await res.json();
+    if (data.logged_in) {
+        // XP is client-side since backend doesn't expose/update it
+        const xp = localStorage.getItem('xp') || 0;
+        const level = Math.floor(xp / 100) + 1;
+        document.getElementById('profile-info').innerText = `Username: ${data.username}\nID: ${data.id}\nXP: ${xp}\nLevel: ${level}`;
+        profileModal.classList.remove('hidden');
+    }
+});
+document.getElementById('close-profile').addEventListener('click', () => {
+    profileModal.classList.add('hidden');
+});
+
+// Habits
+document.getElementById('add-habit-btn').addEventListener('click', async () => {
+    const name = document.getElementById('new-habit').value;
+    const frequency = document.getElementById('frequency').value;
+    if (!name) return;
+    try {
+        const res = await fetch(`${BASE_URL}/habits`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, frequency }),
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showToast(data.message);
+            updateHabits();
+        } else {
+            showToast(data.message || 'Error');
+        }
+    } catch (err) {
+        showToast('Network error');
+    }
+});
+
+async function updateHabits() {
+    const habitList = document.getElementById('habit-list');
+    habitList.innerHTML = '';
+    try {
+        const res = await fetch(`${BASE_URL}/habits`, { credentials: 'include' });
+        const habits = await res.json();
+        habits.forEach(habit => {
+            const li = document.createElement('li');
+            li.innerHTML = `${habit.name} (${habit.frequency}) - Streak: ${habit.streak} 
+                <button onclick="logHabit(${habit.id})" ${habit.logged_today ? 'disabled' : ''}>Log Today</button>
+                <button onclick="deleteHabit(${habit.id})">Delete</button>`;
+            habitList.appendChild(li);
+        });
+        updateProgress(habits);
+    } catch (err) {
+        showToast('Error loading habits');
+    }
+}
+
+window.logHabit = async (id) => {
+    try {
+        const res = await fetch(`${BASE_URL}/log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ habit_id: id }),
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (res.ok || res.status === 200) {  // 200 for already logged
+            showToast(data.message);
+            updateXP(10);
+            checkAchievements();
+            updateHabits();
+        } else {
+            showToast(data.message || 'Error');
+        }
+    } catch (err) {
+        showToast('Network error');
+    }
+};
+
+window.deleteHabit = async (id) => {
+    try {
+        const res = await fetch(`${BASE_URL}/habits/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showToast(data.message);
+            updateHabits();
+        } else {
+            showToast(data.message || 'Error');
+        }
+    } catch (err) {
+        showToast('Network error');
+    }
+};
+
+// Sleep Log (LocalStorage, as backend lacks support for details)
+let sleepLogs = JSON.parse(localStorage.getItem('sleepLogs')) || [];
+
+document.getElementById('log-sleep-btn').addEventListener('click', () => {
+    const bedtime = document.getElementById('bedtime').value;
+    const wakeup = document.getElementById('wakeup').value;
+    const quality = document.getElementById('sleep-quality').value;
+    if (bedtime && wakeup) {
+        sleepLogs.push({ date: new Date().toDateString(), bedtime, wakeup, quality });
+        updateSleepHistory();
+        updateXP(5);
+        showToast('Sleep logged! +5 XP');
+    }
+});
+
+function updateSleepHistory() {
+    const history = document.getElementById('sleep-history');
+    history.innerHTML = sleepLogs.map(log => `<p>${log.date}: ${log.bedtime} - ${log.wakeup} (${log.quality})</p>`).join('');
+    localStorage.setItem('sleepLogs', JSON.stringify(sleepLogs));
+}
+
+// Progress & Analytics
+let xp = parseInt(localStorage.getItem('xp')) || 0;
+function updateXP(amount) {
+    xp += amount;
+    localStorage.setItem('xp', xp);
+    document.getElementById('streaks').innerText = `Overall Streaks/XP: ${xp}`;
+}
+
+function updateProgress(habits) {
+    const ctx = document.getElementById('progress-chart').getContext('2d');
+    const labels = habits.map(h => h.name);
+    const data = habits.map(h => h.streak);
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{ label: 'Streaks', data, backgroundColor: 'rgba(74, 144, 226, 0.6)' }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+    });
+    // Update display (streaks are per habit, xp global)
+    updateXP(0); // Refresh
+}
+
+// Achievements
+function checkAchievements() {
+    // Client-side checks
+    showToast('Check console for achievements'); // Placeholder, expand as needed
+}
+
+// Carousel
+let currentSlide = 0;
+const carouselInner = document.querySelector('.carousel-inner');
+const items = document.querySelectorAll('.carousel-item');
+const totalSlides = items.length;
+
+document.querySelector('.carousel-next').addEventListener('click', () => {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    carouselInner.style.transform = `translateX(-${currentSlide * 100}%)`;
+});
+
+document.querySelector('.carousel-prev').addEventListener('click', () => {
+    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+    carouselInner.style.transform = `translateX(-${currentSlide * 100}%)`;
+});
+
+// Toast
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.classList.add('toast');
+    toast.innerText = message;
+    document.getElementById('toast-container').appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Simulate AI Reminders
+function simulateAIReminders() {
+    setInterval(() => {
+        showToast('Reminder: Time for your habits! 📅');
+    }, 15000);
+}
+
+// Load Data
+async function loadData() {
+    updateHabits();
+    updateSleepHistory();
+}
+
+// Check Status on Load
+async function checkStatus() {
+    try {
+        const res = await fetch(`${BASE_URL}/status`, { credentials: 'include' });
+        const data = await res.json();
+        if (data.logged_in) {
+            authModal.classList.add('hidden');
+            app.classList.remove('hidden');
+            loadData();
+            simulateAIReminders();
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+checkStatus();
+window.switchAuthMode = switchAuthMode;
