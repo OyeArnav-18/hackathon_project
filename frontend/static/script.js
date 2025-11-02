@@ -4,48 +4,44 @@ const DASHBOARD_SECTION = document.getElementById('dashboard-section');
 const USER_DISPLAY = document.getElementById('user-display');
 const HABITS_LIST_DIV = document.getElementById('habits-list');
 
-// Form Elements
-const REGISTER_FORM = document.getElementById('register-form');
-const LOGIN_FORM = document.getElementById('login-form');
-const NEW_HABIT_FORM = document.getElementById('new-habit-form');
-
-// Gamification Elements (Ensure these IDs are in your index.html)
+// Gamification Elements
 const USER_LEVEL = document.getElementById('user-level');
 const USER_XP_TOTAL = document.getElementById('user-xp-total');
 const XP_BAR_FILL = document.getElementById('xp-bar-fill');
 const XP_NEEDED = document.getElementById('xp-needed');
 
+// Sleep Modal Elements
+const SLEEP_MODAL = document.getElementById('sleep-modal');
+const OPEN_SLEEP_LOG_BTN = document.getElementById('open-sleep-log-btn');
+const CLOSE_MODAL_BTN = document.querySelector('.modal-content .close-btn');
 
-const BASE_URL = 'http://localhost:5000'; // Flask runs on port 5000
+const BASE_URL = 'http://localhost:5000'; // Change to DEPLOYED URL later!
 
-// Helper function to send data and manage sessions
+// Helper function to send data and include session cookies
 async function apiFetch(url, method = 'GET', data = null) {
     const options = {
         method: method,
         headers: { 'Content-Type': 'application/json' },
         body: data ? JSON.stringify(data) : null,
-        credentials: 'include', // CRITICAL: Sends and receives the secure session cookie
+        credentials: 'include', // CRITICAL for Flask sessions
     };
 
     try {
         const response = await fetch(BASE_URL + url, options);
-        const jsonResponse = await response.json();
-
-        // Check for 401 Unauthorized errors from the server
         if (response.status === 401) {
              alert("Session expired. Please log in again.");
              logoutUser(false);
              return null;
         }
-        return jsonResponse;
+        return response.json();
     } catch (error) {
         console.error('API Fetch Error:', error);
-        alert("Server connection error. Check if backend is running on port 5000.");
+        alert("Server connection error. Check if backend is running.");
         return null;
     }
 }
 
-// --- UI MANAGEMENT ---
+// --- AUTHENTICATION HANDLERS ---
 function showDashboard(username) {
     AUTH_SECTION.style.display = 'none';
     DASHBOARD_SECTION.style.display = 'block';
@@ -53,14 +49,13 @@ function showDashboard(username) {
 }
 
 function logoutUser(redirect = true) {
-    // Clear session and refresh UI
+    // Note: Flask clears the session on its own when the cookie expires/changes.
+    // We just update the UI and refresh.
     AUTH_SECTION.style.display = 'block';
     DASHBOARD_SECTION.style.display = 'none';
     if (redirect) location.reload();
 }
 
-
-// --- INITIAL AUTHENTICATION CHECK ---
 async function checkLoginStatus() {
     const data = await apiFetch('/api/status');
     if (data && data.logged_in) {
@@ -72,8 +67,6 @@ async function checkLoginStatus() {
     }
 }
 
-// --- AUTHENTICATION HANDLERS ---
-
 async function handleRegister(e) {
     e.preventDefault();
     const username = document.getElementById('reg-username').value;
@@ -84,7 +77,8 @@ async function handleRegister(e) {
     if (data) {
         alert(data.message);
         if (data.message === "Registration successful") {
-            // Automatically log in the new user after successful registration
+            document.getElementById('register-form').reset();
+            // Automatically log the new user in (optional, but good UX)
             handleLogin(new Event('submit'), username, password);
         }
     }
@@ -106,33 +100,27 @@ async function handleLogin(e, initialUsername = null, initialPassword = null) {
     }
 }
 
-
 // --- GAMIFICATION LOGIC ---
 async function fetchAndUpdateGamificationStats() {
-    // Uses the /api/status endpoint which now returns XP and Level
     const userData = await apiFetch('/api/status');
-
     if (userData && userData.logged_in) {
+        // NOTE: You need to modify app.py's /api/status to return xp and level from User model
         const xp = userData.xp || 0;
         const level = userData.level || 1;
         const xpNeeded = level * 100; // Example formula: 100 XP per level
 
-        // These elements MUST exist in index.html for the gamification to show
-        if (USER_LEVEL && USER_XP_TOTAL && XP_BAR_FILL) {
-            USER_LEVEL.textContent = level;
-            USER_XP_TOTAL.textContent = xp;
-            XP_NEEDED.textContent = xpNeeded;
+        USER_LEVEL.textContent = level;
+        USER_XP_TOTAL.textContent = xp;
+        XP_NEEDED.textContent = xpNeeded;
 
-            const progressPercent = Math.min(100, (xp / xpNeeded) * 100);
-            XP_BAR_FILL.style.width = `${progressPercent}%`;
-        }
+        // Calculate and set the width of the XP bar
+        const progressPercent = Math.min(100, (xp / xpNeeded) * 100);
+        XP_BAR_FILL.style.width = `${progressPercent}%`;
     }
 }
 
 
 // --- HABIT CRUD LOGIC ---
-
-// Handler for New Habit Form Submission (POST)
 async function handleCreateHabit(e) {
     e.preventDefault();
     const name = document.getElementById('new-habit-name').value;
@@ -141,19 +129,18 @@ async function handleCreateHabit(e) {
 
     if (data && data.message.includes("created successfully")) {
         document.getElementById('new-habit-form').reset();
-        fetchAndRenderHabits(); // Reload list
+        fetchAndRenderHabits();
     } else if (data) {
         alert("Error adding habit: " + data.message);
     }
 }
 
-// Handler for Habit Logging (POST)
 async function handleLogHabit(habitId) {
     const data = await apiFetch('/api/log', 'POST', { habit_id: habitId });
 
     if (data && data.message.includes("logged successfully")) {
-        alert("Habit checked off! Keep the streak going! +10 XP");
-        fetchAndRenderHabits();
+        alert("Habit checked off! Keep the streak going!");
+        fetchAndRenderHabits(); // Re-render to show checkmark/new streak
         fetchAndUpdateGamificationStats(); // Update XP
     } else if (data && data.message.includes("already logged today")) {
         alert("You already checked this off today.");
@@ -162,21 +149,19 @@ async function handleLogHabit(habitId) {
     }
 }
 
-// Handler for Habit Deletion (DELETE)
 async function handleDeleteHabit(habitId, habitName) {
-    if (!confirm(`Are you sure you want to delete the habit: ${habitName}? This cannot be undone.`)) return;
+    if (!confirm(`Are you sure you want to delete the habit: ${habitName}?`)) return;
 
     const data = await apiFetch(`/api/habits/${habitId}`, 'DELETE');
 
     if (data && data.message.includes("deleted successfully")) {
         alert(data.message);
-        fetchAndRenderHabits(); // Reload list
+        fetchAndRenderHabits();
     } else if (data) {
         alert("Error deleting habit: " + data.message);
     }
 }
 
-// Handler for Displaying Habits (GET)
 async function fetchAndRenderHabits() {
     HABITS_LIST_DIV.innerHTML = '<p>Loading habits...</p>';
     const habits = await apiFetch('/api/habits');
@@ -205,7 +190,7 @@ async function fetchAndRenderHabits() {
             </div>
         `;
 
-        // Attach event listeners to the dynamically created buttons
+        // Attach event listeners
         card.querySelector('.check-btn').addEventListener('click', () => handleLogHabit(habit.id));
         card.querySelector('.delete-btn').addEventListener('click', () => handleDeleteHabit(habit.id, habit.name));
 
@@ -214,22 +199,19 @@ async function fetchAndRenderHabits() {
 }
 
 
-// --- SLEEP LOG LOGIC (Bonus Feature) ---
-// Note: Requires sleep log form and modal to be present in index.html
+// --- SLEEP LOG LOGIC ---
 async function handleSleepLog(e) {
     e.preventDefault();
     const bedtime = document.getElementById('bedtime').value;
     const wake_up = document.getElementById('wake-up').value;
-    const quality = document.getElementById('quality').value; // Assuming a 1-5 rating or similar
+    const quality = document.getElementById('quality').value;
 
     const data = await apiFetch('/api/sleep', 'POST', { bedtime, wake_up, quality });
 
     if (data && data.message.includes("logged successfully")) {
         alert(data.message);
-        // Assuming SLEEP_MODAL is defined
-        const SLEEP_MODAL = document.getElementById('sleep-modal');
-        if (SLEEP_MODAL) SLEEP_MODAL.style.display = 'none';
-
+        SLEEP_MODAL.style.display = 'none';
+        // Update the XP display
         fetchAndUpdateGamificationStats();
         document.getElementById('sleep-log-form').reset();
     } else if (data) {
@@ -237,21 +219,37 @@ async function handleSleepLog(e) {
     }
 }
 
+// --- DARK MODE LOGIC (Accessibility) ---
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('dark-mode', document.body.classList.contains('dark-mode'));
+}
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Core Status Check
+    // Load Dark Mode preference
+    if (localStorage.getItem('dark-mode') === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+
+    // Core Status Check
     checkLoginStatus();
 
-    // 2. Attach Event Listeners to Forms
-    REGISTER_FORM.addEventListener('submit', handleRegister);
-    LOGIN_FORM.addEventListener('submit', handleLogin);
-    NEW_HABIT_FORM.addEventListener('submit', handleCreateHabit);
+    // Attach Event Listeners
+    document.getElementById('register-form').addEventListener('submit', handleRegister);
+    document.getElementById('login-form').addEventListener('submit', handleLogin);
+    document.getElementById('new-habit-form').addEventListener('submit', handleCreateHabit);
+    document.getElementById('logout-btn').addEventListener('click', logoutUser);
 
-    // Assuming you have a Logout button and Sleep Form:
-    const LOGOUT_BTN = document.getElementById('logout-btn');
-    if (LOGOUT_BTN) LOGOUT_BTN.addEventListener('click', logoutUser);
+    document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
 
-    const SLEEP_LOG_FORM = document.getElementById('sleep-log-form');
-    if (SLEEP_LOG_FORM) SLEEP_LOG_FORM.addEventListener('submit', handleSleepLog);
+    // Modal Listeners
+    OPEN_SLEEP_LOG_BTN.addEventListener('click', () => { SLEEP_MODAL.style.display = 'block'; });
+    CLOSE_MODAL_BTN.addEventListener('click', () => { SLEEP_MODAL.style.display = 'none'; });
+    document.getElementById('sleep-log-form').addEventListener('submit', handleSleepLog);
+    window.addEventListener('click', (event) => {
+        if (event.target === SLEEP_MODAL) {
+            SLEEP_MODAL.style.display = 'none';
+        }
+    });
 });
