@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Habit Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- For charts -->
+</head>
+<body>
+    <!-- Login/Register Modal -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="auth-title">Login</h2>
+            <form id="auth-form">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Submit</button>
+            </form>
+            <p id="auth-switch">Don't have an account? <a href="#" onclick="switchAuthMode()">Sign up</a></p>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until login) -->
+    <div id="app" class="hidden">
+        <!-- Header -->
+        <header>
+            <h1>Smart Habit Tracker</h1>
+            <button id="dark-mode-toggle">Toggle Dark Mode</button>
+            <button id="profile-btn">Profile</button>
+            <button id="logout-btn">Logout</button>
+        </header>
+
+        <!-- Dashboard with Bento Grid -->
+        <main class="bento-grid">
+            <!-- Habit Creation/Tracking -->
+            <section class="bento-item habit-tracker">
+                <h2>Habits (e.g., Hydration, Exercise)</h2>
+                <input type="text" id="new-habit" placeholder="Add habit name">
+                <select id="frequency">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+                <button id="add-habit-btn">Add</button>
+                <ul id="habit-list"></ul>
+            </section>
+
+            <!-- Sleep Log (Client-side, as backend doesn't support details) -->
+            <section class="bento-item sleep-log">
+                <h2>Sleep Log</h2>
+                <input type="time" id="bedtime" placeholder="Bedtime">
+                <input type="time" id="wakeup" placeholder="Wake-up">
+                <select id="sleep-quality">
+                    <option>Quality: Poor</option>
+                    <option>Quality: Average</option>
+                    <option>Quality: Good</option>
+                </select>
+                <button id="log-sleep-btn">Log Sleep</button>
+                <div id="sleep-history"></div>
+            </section>
+
+            <!-- Progress Dashboard -->
+            <section class="bento-item progress-dashboard span-2">
+                <h2>Progress & Analytics</h2>
+                <canvas id="progress-chart"></canvas>
+                <p id="streaks">Streaks: 0 | XP: 0</p>
+            </section>
+
+            <!-- Achievements Carousel -->
+            <section class="bento-item achievements span-2">
+                <h2>Achievements</h2>
+                <div class="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item">Achievement 1: 5-Day Streak 🏆</div>
+                        <div class="carousel-item">Achievement 2: Hydration Master 💧</div>
+                        <div class="carousel-item">Achievement 3: Sleep Pro 😴</div>
+                        <div class="carousel-item">Achievement 4: Exercise Enthusiast 🏋️</div>
+                    </div>
+                    <button class="carousel-prev">&lt;</button>
+                    <button class="carousel-next">&gt;</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Profile Modal -->
+        <div id="profile-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Profile</h2>
+                <p id="profile-info"></p>
+                <button id="close-profile">Close</button>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
